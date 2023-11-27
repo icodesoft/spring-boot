@@ -317,10 +317,11 @@ public class SpringApplication {
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
 
 			// 从这儿对会真正的进入spring的流程， AbstractApplicationContext.refresh()
-			// postProcessBeanFactory(beanFactory); BeanFactory前置处理，web server会在这里创建与启动，如tomcat
+			// postProcessBeanFactory(beanFactory); BeanFactory前置处理
 			// invokeBeanFactoryPostProcessors(beanFactory); 获取并调用每一个BeanFactoryPostProcess用于处理beanDefinition
 			// registerBeanPostProcessors(beanFactory); 注册BeanPostProcessor
             // registerBeanPostProcessors(beanFactory); 注册所有BeanPostProcessor，并在bean创建时调用它
+			// onRefresh web server会在这里创建与启动，如tomcat
 			refreshContext(context);
 
 			afterRefresh(context, applicationArguments);
