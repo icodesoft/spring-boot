@@ -132,6 +132,8 @@ class BeanDefinitionLoader {
 
 	private int load(Object source) {
 		Assert.notNull(source, "Source must not be null");
+
+		// 因为我们用的是springboot，默认用的是注释，所以会走下面加载流程
 		if (source instanceof Class<?>) {
 			return load((Class<?>) source);
 		}

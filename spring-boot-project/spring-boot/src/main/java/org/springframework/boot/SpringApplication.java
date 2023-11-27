@@ -307,9 +307,22 @@ public class SpringApplication {
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
+
+			// 创建spring容器， beanfactory: DefaultListableBeanFactory
 			context = createApplicationContext();
+
+			// refresh容器前做的一些准备，主要
+			// 1、实例化了所有初始器
+			// 2、加载了BeanDefinition
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+
+			// 从这儿对会真正的进入spring的流程， AbstractApplicationContext.refresh()
+			// postProcessBeanFactory(beanFactory); BeanFactory前置处理，web server会在这里创建与启动，如tomcat
+			// invokeBeanFactoryPostProcessors(beanFactory); 获取并调用每一个BeanFactoryPostProcess用于处理beanDefinition
+			// registerBeanPostProcessors(beanFactory); 注册BeanPostProcessor
+            // registerBeanPostProcessors(beanFactory); 注册所有BeanPostProcessor，并在bean创建时调用它
 			refreshContext(context);
+
 			afterRefresh(context, applicationArguments);
 			stopWatch.stop();
 			if (this.logStartupInfo) {
@@ -362,8 +375,13 @@ public class SpringApplication {
 
 	private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
 			SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
+		// 设置运行环境
 		context.setEnvironment(environment);
+
+		// 设置资源加载器、bean名称生成器以及转换服务
 		postProcessApplicationContext(context);
+
+		// 实例化之前获取的所有initializer
 		applyInitializers(context);
 		listeners.contextPrepared(context);
 		if (this.logStartupInfo) {
@@ -373,6 +391,8 @@ public class SpringApplication {
 		// Add boot specific singleton beans
 		ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
 		beanFactory.registerSingleton("springApplicationArguments", applicationArguments);
+
+		// 注册banner
 		if (printedBanner != null) {
 			beanFactory.registerSingleton("springBootBanner", printedBanner);
 		}
@@ -380,13 +400,19 @@ public class SpringApplication {
 			((DefaultListableBeanFactory) beanFactory)
 					.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
+
+		// 懒加载beanfactory后置处理器
 		if (this.lazyInitialization) {
 			context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor());
 		}
+
 		// Load the sources
 		Set<Object> sources = getAllSources();
 		Assert.notEmpty(sources, "Sources must not be empty");
+
+		// 加载所有BeanDefinition到context
 		load(context, sources.toArray(new Object[0]));
+
 		listeners.contextLoaded(context);
 	}
 
@@ -675,6 +701,8 @@ public class SpringApplication {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Loading source " + StringUtils.arrayToCommaDelimitedString(sources));
 		}
+
+		// 获取BeanDefinition加载器
 		BeanDefinitionLoader loader = createBeanDefinitionLoader(getBeanDefinitionRegistry(context), sources);
 		if (this.beanNameGenerator != null) {
 			loader.setBeanNameGenerator(this.beanNameGenerator);
@@ -685,6 +713,8 @@ public class SpringApplication {
 		if (this.environment != null) {
 			loader.setEnvironment(this.environment);
 		}
+
+		// 开始加载
 		loader.load();
 	}
 
